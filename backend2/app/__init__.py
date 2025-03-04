@@ -1,0 +1,1 @@
+print("initialisation du package app")

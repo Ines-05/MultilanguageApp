@@ -1,8 +1,8 @@
 from fastapi import APIRouter, WebSocket, Depends, HTTPException
-from .models import User, Message
-from .database import users_collection, messages_collection
-from .auth import get_current_user, authenticate_user, create_access_token
-from .websocket_manager import manager
+from app.models import User, Message
+from app.database import users_collection, messages_collection
+from app.auth import get_current_user, authenticate_user, create_access_token
+from app.websocket_manager import manager
 from datetime import datetime
 
 router = APIRouter()

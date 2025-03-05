@@ -3,8 +3,8 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status, Depends
-from .models import UserInDB
-from .database import users_collection
+from app.models import UserInDB
+from app.database import users_collection
 
 SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"

@@ -1,20 +1,16 @@
-# backend2/app/auth.py
-from datetime import datetime, timedelta
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from datetime import datetime, timedelta
+from fastapi import HTTPException, status, Depends
 from .models import UserInDB
+from .database import users_collection
 
-# Configuration pour JWT
-SECRET_KEY = "votre_secret_key"
+SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Configuration pour le hachage des mots de passe
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# Schéma OAuth2 pour la gestion des tokens
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def verify_password(plain_password, hashed_password):
@@ -22,6 +18,19 @@ def verify_password(plain_password, hashed_password):
 
 def get_password_hash(password):
     return pwd_context.hash(password)
+
+async def get_user(username: str):
+    user = await users_collection.find_one({"username": username})
+    if user:
+        return UserInDB(**user, id=str(user["_id"]))
+
+async def authenticate_user(username: str, password: str):
+    user = await get_user(username)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
@@ -44,10 +53,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
+        token_data = {"username": username}
     except JWTError:
         raise credentials_exception
-
-    user = UserInDB.get_user(username)
+    user = await get_user(username=token_data["username"])
     if user is None:
         raise credentials_exception
     return user

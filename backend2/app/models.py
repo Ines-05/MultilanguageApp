@@ -1,23 +1,16 @@
-# backend2/app/models.py
 from pydantic import BaseModel
-from .database import Base
-from sqlalchemy import Column, Integer, String
+from datetime import datetime
 
-# Modèle Pydantic pour les utilisateurs
-class UserInDB(BaseModel):
+class User(BaseModel):
     username: str
     email: str
     hashed_password: str
 
-    @classmethod
-    def get_user(cls, username: str):
-        # Logique pour récupérer un utilisateur depuis la base de données
-        return cls(username="example", email="example@example.com", hashed_password="hashed_password")
+class UserInDB(User):
+    id: str
 
-# Modèle SQLAlchemy pour les utilisateurs
-class User(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
+class Message(BaseModel):
+    sender: str
+    receiver: str
+    content: str
+    timestamp: datetime

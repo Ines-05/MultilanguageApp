@@ -1,16 +1,9 @@
 # backend2/app/database.py
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from pymongo import MongoClient
 
-# URL de la base de données (à adapter selon votre configuration)
-DATABASE_URL = "sqlite:///./test.db"
+# Connexion à MongoDB
+client = MongoClient("mongodb://localhost:27017/")  # Remplacez par votre URI MongoDB
+db = client["multilanguage_app"]  # Nom de la base de données
 
-# Création du moteur de base de données
-engine = create_engine(DATABASE_URL)
-
-# Session locale
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base pour les modèles SQLAlchemy
-Base = declarative_base()
+# Collections MongoDB
+users_collection = db["users"]

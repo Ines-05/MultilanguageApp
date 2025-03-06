@@ -1,20 +1,21 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
-import { User } from "@shared/schema";
+import {AuthUser, User} from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
 type LoginData = {
-  email: string;
+  username: string;  // Changed from email to username to match backend
   password: string;
 };
 
-type RegisterData = LoginData & {
+type RegisterData = {
   username: string;
+  password: string;
   defaultLanguage?: string;
   languageLevel?: string;
 };
 
 type AuthContextType = {
-  user: User | null;
+  user: AuthUser | null;
   isLoading: boolean;
   error: Error | null;
   loginMutation: {
@@ -32,13 +33,15 @@ type AuthContextType = {
 };
 
 const STORAGE_KEY = "auth_user";
+const API_BASE_URL = "http://localhost:8000"; // Adjust based on your API configuration
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [loginPending, setLoginPending] = useState(false);
   const [registerPending, setRegisterPending] = useState(false);
   const [logoutPending, setLogoutPending] = useState(false);
@@ -46,36 +49,92 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const storedUser = localStorage.getItem(STORAGE_KEY);
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const userData = JSON.parse(storedUser) as AuthUser;
+        setUser(userData);
+        // Verify the token is still valid
+        validateToken(userData.token);
+      } catch (err) {
+        console.error("Failed to parse stored user data", err);
+        localStorage.removeItem(STORAGE_KEY);
+      }
     }
     setIsLoading(false);
   }, []);
 
+  const validateToken = async (token: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/protected`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        // Token is invalid or expired
+        setUser(null);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch (err) {
+      console.error("Token validation error", err);
+    }
+  };
+
   const loginMutation = {
     mutateAsync: async (credentials: LoginData) => {
       setLoginPending(true);
-      try {
-        // Simuler une requête API
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      setError(null);
 
-        // Pour la démo, on accepte n'importe quelles credentials
-        const mockUser: User = {
-          id: 1,
-          email: credentials.email,
-          username: credentials.email.split('@')[0],
-          password: '',  // On ne stocke jamais le mot de passe
-          defaultLanguage: 'fr',
-          languageLevel: 'standard',
-          createdAt: new Date(),
+      try {
+        // Create FormData to match OAuth2PasswordRequestForm expected by FastAPI
+        const formData = new URLSearchParams();
+        formData.append('username', credentials.username);
+        formData.append('password', credentials.password);
+
+        const response = await fetch(`${API_BASE_URL}/token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Login failed');
+        }
+
+        const authData = await response.json();
+        console.log(authData);
+
+        // Fetch user details
+        const userResponse = await fetch(`${API_BASE_URL}/users/me`, {
+          headers: {
+            Authorization: `Bearer ${authData.access_token}`
+          }
+        });
+
+        if (!userResponse.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+
+        const userData = await userResponse.json();
+
+        // Combine auth data with user data
+        const user:AuthUser = {
+          ...userData,
+          token:authData.access_token,
         };
 
-        setUser(mockUser);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
-        return mockUser;
+        setUser(user);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+        return user;
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Login failed";
+        setError(error instanceof Error ? error : new Error(errorMessage));
         toast({
-          title: "Erreur de connexion",
-          description: error instanceof Error ? error.message : "Une erreur est survenue",
+          title: "Login Error",
+          description: errorMessage,
           variant: "destructive",
         });
         throw error;
@@ -89,27 +148,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = {
     mutateAsync: async (data: RegisterData) => {
       setRegisterPending(true);
+      setError(null);
+
       try {
-        // Simuler une requête API
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Create user
+        const createResponse = await fetch(`${API_BASE_URL}/create_user/${data.username}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            password: data.password,
+            default_language: data.defaultLanguage,
+            language_level: data.languageLevel
+          })
+        });
 
-        const mockUser: User = {
-          id: 1,
-          email: data.email,
+        if (!createResponse.ok) {
+          const errorData = await createResponse.json();
+          throw new Error(errorData.detail || 'Registration failed');
+        }
+
+        // Login with newly created credentials
+        return await loginMutation.mutateAsync({
           username: data.username,
-          password: '',
-          defaultLanguage: data.defaultLanguage || 'fr',
-          languageLevel: data.languageLevel || 'standard',
-          createdAt: new Date(),
-        };
-
-        setUser(mockUser);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
-        return mockUser;
+          password: data.password
+        });
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Registration failed";
+        setError(error instanceof Error ? error : new Error(errorMessage));
         toast({
-          title: "Erreur d'inscription",
-          description: error instanceof Error ? error.message : "Une erreur est survenue",
+          title: "Registration Error",
+          description: errorMessage,
           variant: "destructive",
         });
         throw error;
@@ -134,18 +204,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        error: null,
-        loginMutation,
-        logoutMutation,
-        registerMutation,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider
+          value={{
+            user,
+            isLoading,
+            error,
+            loginMutation,
+            logoutMutation,
+            registerMutation,
+          }}
+      >
+        {children}
+      </AuthContext.Provider>
   );
 }
 

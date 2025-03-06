@@ -65,109 +65,109 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex items-center justify-center p-8"
-      >
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Créer un compte</CardTitle>
-            <CardDescription>
-              Rejoignez notre communauté multilingue
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Nom d'utilisateur</Label>
-                <Input
-                  id="username"
-                  {...form.register("username")}
-                />
-                {form.formState.errors.username && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.username.message}
-                  </p>
-                )}
-              </div>
+      <div className="min-h-screen grid lg:grid-cols-2">
+        <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center justify-center p-8"
+        >
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Créer un compte</CardTitle>
+              <CardDescription>
+                Rejoignez notre communauté multilingue
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Nom d'utilisateur</Label>
+                  <Input
+                      id="username"
+                      {...form.register("username")}
+                  />
+                  {form.formState.errors.username && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.username.message}
+                      </p>
+                  )}
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...form.register("email")}
-                />
-                {form.formState.errors.email && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                      id="email"
+                      type="email"
+                      {...form.register("email")}
+                  />
+                  {form.formState.errors.email && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.email.message}
+                      </p>
+                  )}
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  {...form.register("password")}
-                />
-                {form.formState.errors.password && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.password.message}
-                  </p>
-                )}
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Mot de passe</Label>
+                  <Input
+                      id="password"
+                      type="password"
+                      {...form.register("password")}
+                  />
+                  {form.formState.errors.password && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.password.message}
+                      </p>
+                  )}
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  {...form.register("confirmPassword")}
-                />
-                {form.formState.errors.confirmPassword && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.confirmPassword.message}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-            <CardFooter className="flex-col gap-4">
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={registerMutation.isPending}
-              >
-                {registerMutation.isPending ? "Création..." : "Créer un compte"}
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                Déjà un compte ?{" "}
-                <Link href="/auth/login" className="text-primary hover:underline">
-                  Se connecter
-                </Link>
-              </p>
-            </CardFooter>
-          </form>
-        </Card>
-      </motion.div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+                  <Input
+                      id="confirmPassword"
+                      type="password"
+                      {...form.register("confirmPassword")}
+                  />
+                  {form.formState.errors.confirmPassword && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.confirmPassword.message}
+                      </p>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter className="flex-col gap-4">
+                <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={registerMutation.isPending}
+                >
+                  {registerMutation.isPending ? "Création..." : "Créer un compte"}
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Déjà un compte ?{" "}
+                  <Link href="/auth/login" className="text-primary hover:underline">
+                    Se connecter
+                  </Link>
+                </p>
+              </CardFooter>
+            </form>
+          </Card>
+        </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="hidden lg:flex flex-col items-center justify-center p-8 bg-muted"
-      >
-        <Globe className="w-16 h-16 mb-8 text-primary" />
-        <h2 className="text-3xl font-bold text-center mb-4">
-          Chat Multilingue Intelligent
-        </h2>
-        <p className="text-xl text-center text-muted-foreground max-w-md">
-          Brisez les barrières linguistiques avec une traduction en temps réel.
-          Créez votre compte pour commencer à chatter dans plusieurs langues.
-        </p>
-      </motion.div>
-    </div>
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="hidden lg:flex flex-col items-center justify-center p-8 bg-muted"
+        >
+          <Globe className="w-16 h-16 mb-8 text-primary" />
+          <h2 className="text-3xl font-bold text-center mb-4">
+            Chat Multilingue Intelligent
+          </h2>
+          <p className="text-xl text-center text-muted-foreground max-w-md">
+            Brisez les barrières linguistiques avec une traduction en temps réel.
+            Créez votre compte pour commencer à chatter dans plusieurs langues.
+          </p>
+        </motion.div>
+      </div>
   );
 }

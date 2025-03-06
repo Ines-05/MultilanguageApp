@@ -31,6 +31,7 @@ export const messages = pgTable("messages", {
 
 export const users = pgTable("users", {
     id: serial("id").primaryKey(),
+
     email: text("email").notNull().unique(),
     username: text("username").notNull().unique(),
     password: text("password").notNull(),
@@ -60,7 +61,9 @@ export type Message = typeof messages.$inferSelect;
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
-
+export type AuthUser = User & {
+    token: string;
+};
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type Conversation = typeof conversations.$inferSelect;
 

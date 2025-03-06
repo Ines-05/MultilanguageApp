@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 
 const loginSchema = z.object({
-  email: z.string().email("Email invalide"),
+  username: z.string().min(1, "Le nom d'utilisateur est requis"),
   password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
 });
 
@@ -32,7 +32,7 @@ export default function LoginPage() {
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
@@ -49,7 +49,7 @@ export default function LoginPage() {
     } catch (error) {
       toast({
         title: "Erreur de connexion",
-        description: "Email ou mot de passe incorrect",
+        description: "Nom d'utilisateur ou mot de passe incorrect",
         variant: "destructive",
       });
     }
@@ -72,16 +72,16 @@ export default function LoginPage() {
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Nom d'utilisateur</Label>
                   <Input
-                      id="email"
-                      type="email"
-                      placeholder="votre@email.com"
-                      {...form.register("email")}
+                      id="username"
+                      type="text"
+                      placeholder="Votre nom d'utilisateur"
+                      {...form.register("username")}
                   />
-                  {form.formState.errors.email && (
+                  {form.formState.errors.username && (
                       <p className="text-sm text-destructive">
-                        {form.formState.errors.email.message}
+                        {form.formState.errors.username.message}
                       </p>
                   )}
                 </div>

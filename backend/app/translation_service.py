@@ -53,21 +53,29 @@ def translate_sync(text: str, source_lang: str, target_lang: str, register: str)
     return translated_text
 
 
-async def translate_text(text: str, source_lang: str, target_lang: str, register: str = "courant") -> str:
+async def translate_text(
+    text: str, source_lang: str, target_langs: list[str], register: str = "courant"
+) -> dict[str, str]:
     """
     Fonction asynchrone de traduction qui :
       1. Vérifie le cache Redis,
       2. Exécute la traduction dans un thread séparé si besoin,
       3. Stocke le résultat dans le cache.
+    Retourne un dictionnaire avec les traductions pour chaque langue cible.
     """
-    cache_key = generate_cache_key(text, source_lang, target_lang, register)
-    cached = await redis.get(cache_key)
-    if cached:
-        return cached
+    translations = {}
+    for target_lang in target_langs:
+        cache_key = generate_cache_key(text, source_lang, target_lang, register)
+        cached = await redis.get(cache_key)
+        if cached:
+            translations[target_lang] = cached
+            continue
 
-    loop = asyncio.get_event_loop()
-    translation = await loop.run_in_executor(
-        executor, translate_sync, text, source_lang, target_lang, register
-    )
-    await redis.set(cache_key, translation, ex=3600)  # Cache pendant 1 heure
-    return translation
+        loop = asyncio.get_event_loop()
+        translation = await loop.run_in_executor(
+            executor, translate_sync, text, source_lang, target_lang, register
+        )
+        await redis.set(cache_key, translation, ex=3600)  # Cache pendant 1 heure
+        translations[target_lang] = translation
+
+    return translations

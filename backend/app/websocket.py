@@ -22,14 +22,7 @@ async def websocket_endpoint(
     token: str = Query(...),
     db: Session = Depends(get_db),
 ):
-    """
-    Gère les connexions WebSocket pour le chat de groupe.
-    Chaque message est attendu au format JSON avec les informations de traduction.
-    Si le format JSON n'est pas respecté, on utilise des valeurs par défaut.
-    La traduction est réalisée via le service mBART et le message traduit est diffusé.
-    """
     try:
-        # Valider manuellement le token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
         if not user_id:
@@ -44,33 +37,33 @@ async def websocket_endpoint(
         while True:
             data = await websocket.receive_text()
             try:
-                # Essayer de parser le message en JSON
                 message_data = json.loads(data)
                 content = message_data.get("content", "")
                 from_lang = message_data.get("fromLanguage", "fr")
-                to_lang = message_data.get("toLanguage", "en")
+                to_langs = message_data.get("toLanguages", ["en"])  # Liste des langues cibles
                 register = message_data.get("register", "courant")
             except Exception:
-                # Si le message n'est pas en JSON, utiliser les valeurs par défaut
                 content = data
                 from_lang = "fr"
-                to_lang = "en"
+                to_langs = ["en"]  # Par défaut, traduire en anglais
                 register = "courant"
 
-            # Appel asynchrone du service de traduction
-            translated_content = await translate_text(content, from_lang, to_lang, register)
+            # Traduction pour chaque langue cible
+            translations = await translate_text(content, from_lang, to_langs, register)
 
             # Enregistrement du message original dans la base de données
             message = ChatMessage(user_id=user_id, room_id=room_id, content=content)
             db.add(message)
             db.commit()
 
-            # Diffusion du message traduit
-            await manager.broadcast_message(f"{user_id}: {translated_content}", room_id)
+            # Diffusion du message traduit à chaque utilisateur dans sa langue
+            for target_lang, translated_content in translations.items():
+                await manager.broadcast_message(
+                    f"{user_id} ({target_lang}): {translated_content}", room_id
+                )
     except WebSocketDisconnect:
         manager.disconnect(websocket, room_id)
         await manager.broadcast_message(f"User {user_id} left the room", room_id)
-
 
 @router.websocket("/ws_private/{other_user_id}")
 async def private_message_websocket(
@@ -79,11 +72,6 @@ async def private_message_websocket(
     current_user: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Gère la connexion WebSocket pour les messages privés.
-    Les messages sont attendus au format JSON (voir ci-dessus pour le format).
-    La traduction du message est réalisée avant diffusion.
-    """
     await manager.connect_private(websocket, other_user_id, current_user)
     try:
         while True:
@@ -92,7 +80,7 @@ async def private_message_websocket(
                 message_data = json.loads(data)
                 content = message_data.get("content", "")
                 from_lang = message_data.get("fromLanguage", "fr")
-                to_lang = message_data.get("toLanguage", "en")
+                to_lang = message_data.get("toLanguage", "en")  # Langue cible unique
                 register = message_data.get("register", "courant")
             except Exception:
                 content = data
@@ -101,7 +89,8 @@ async def private_message_websocket(
                 register = "courant"
 
             # Traduction du message
-            translated_content = await translate_text(content, from_lang, to_lang, register)
+            translations = await translate_text(content, from_lang, [to_lang], register)
+            translated_content = translations[to_lang]
 
             # Enregistrement du message privé dans la base de données
             message = PrivateMessage(

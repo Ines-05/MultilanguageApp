@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Message, Conversation, type LanguageCode } from "@shared/schema";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,60 +7,86 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Send, Plus } from "lucide-react";
 import ChatMessage from "@/components/ChatMessage";
 import ConversationList from "@/components/ConversationList";
-import LanguageSelector from "@/components/LanguageSelector";
 import NewChatDialog from "@/components/NewChatDialog";
 import { simulateTranslation } from "@/lib/translations";
-import { nanoid } from "nanoid";
-import { sendMessage, connectWebSocket, isConnected, getCurrentRoomOrUserId, subscribeToMessages } from "@/lib/websocket";
+import { connectWebSocket, sendMessage, subscribeToMessages, disconnectWebSocket } from "@/lib/websocket";
+import { fetchConversations, createPrivateConversation, createGroupConversation, fetchPrivateMessages, fetchGroupMessages } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Chat() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [conversations, setConversations] = useState<Conversation[]>(() => {
-    // Mock data for frontend-only version
-    return [
-      {
-        id: 1,
-        type: "private" as const,
-        name: null,
-        createdAt: new Date(),
-      },
-      {
-        id: 2,
-        type: "group" as const,
-        name: "Groupe de français",
-        createdAt: new Date(),
-      },
-    ];
-  });
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [preview, setPreview] = useState("");
   const [fromLang, setFromLang] = useState<LanguageCode>("en");
   const [toLang, setToLang] = useState<LanguageCode>("fr");
   const [isTyping, setIsTyping] = useState(false);
-  const [userId] = useState("user-" + nanoid(6)); // Generate a simple user ID for this session
 
-  // Set up WebSocket connection when a conversation is selected
-  useEffect(() => {
-    if (!selectedConversation) return;
+  const { data: conversationsData, isLoading } = useQuery({
+    queryKey: ['conversations'],
+    queryFn: fetchConversations,
+    enabled: !!user,
+  });
 
-    const type:'group'|'private' = selectedConversation.type;
-    const roomIdOrUserId = selectedConversation.id.toString();
-
-    // Check if we need to connect (either not connected or connected to a different room)
-    if (!isConnected() || getCurrentRoomOrUserId() !== roomIdOrUserId) {
-      connectWebSocket(type, roomIdOrUserId, userId);
+  const createConversationMutation = useMutation({
+    mutationFn: (data: Conversation) => {
+      return data.type === 'private'
+          ? createPrivateConversation(data.id)
+          : createGroupConversation({ name: data.name, members: [data.id] });
+    },
+    onSuccess: (newConv) => {
+      queryClient.setQueryData(['conversations'], (old: Conversation[] | undefined) =>
+          old ? [...old, newConv] : [newConv]
+      );
     }
+  });
 
-    // Subscribe to incoming messages for this conversation
-    const unsubscribe = subscribeToMessages(selectedConversation.id, (message) => {
-      setMessages(prev => [...prev, message]);
-    });
+  const conversations = [
+    ...(conversationsData?.private || []),
+    ...(conversationsData?.group || []),
+  ];
+
+  const { data: messagesData } = useQuery({
+    queryKey: ['messages', selectedConversation?.id],
+    queryFn: async () => {
+      if (!selectedConversation || !user) return [];
+      return selectedConversation.type === 'private'
+          ? await fetchPrivateMessages(selectedConversation.id)
+          : await fetchGroupMessages(selectedConversation.id);
+    },
+    enabled: !!selectedConversation,
+  });
+
+  useEffect(() => {
+    if (!selectedConversation || !user?.id) return;
+
+    connectWebSocket(
+        selectedConversation.type,
+        selectedConversation.id,
+        user.id
+    );
+
+    const unsubscribe = subscribeToMessages(
+        selectedConversation.id.toString(),
+        (message) => {
+          queryClient.setQueryData(
+              ['messages', selectedConversation.id],
+              (old: Message[] | undefined) => {
+                const exists = old?.some(m => m.id === message.id);
+                return exists ? old : [...(old || []), message];
+              }
+          );
+        }
+    );
 
     return () => {
       unsubscribe();
+      disconnectWebSocket();
     };
-  }, [selectedConversation, userId]);
+  }, [selectedConversation, user, queryClient]);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -78,9 +105,8 @@ export default function Chat() {
   }, [input, fromLang, toLang]);
 
   const handleSend = async () => {
-    if (!input.trim() || !selectedConversation) return;
+    if (!input.trim() || !selectedConversation || !user) return;
 
-    // Make sure we have a translation
     let translatedText = preview;
     if (!translatedText) {
       setIsTyping(true);
@@ -88,44 +114,43 @@ export default function Chat() {
       setIsTyping(false);
     }
 
-    const newMessage: Message = {
-      id: parseInt(nanoid()),
+    const messagePayload = {
       content: input,
+      from_language: fromLang,
+      to_language: toLang,
+      sender: user.id.toString(),
+      conversationId: selectedConversation.id.toString(),
       translatedContent: translatedText,
-      fromLanguage: fromLang,
-      toLanguage: toLang,
-      sender: "user",
-      conversationId: selectedConversation.id,
-      timestamp: new Date(),
+      ...(selectedConversation.type === 'private' && {
+        receiver_id: selectedConversation.id.toString()
+      })
     };
 
-    // Add message to UI
-    setMessages((prev) => [...prev, newMessage]);
+    const success = sendMessage(messagePayload);
 
-    // Attempt to send via WebSocket
-    sendMessage({
-      content: input,
-      fromLanguage: fromLang,
-      toLanguage: toLang,
-      sender: "user",
-      conversationId: selectedConversation.id,
-      translatedContent: translatedText
-    });
-
-    setInput("");
-    setPreview("");
+    if (success) {
+      setInput("");
+      setPreview("");
+    } else {
+      toast({
+        title: "Erreur d'envoi",
+        description: "La connexion au chat a échoué",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleCreateChat = (data: { type: "private" | "group"; name?: string; members: string[] }) => {
-    const newConversation: Conversation = {
-      id: conversations.length + 1,
-      type: data.type,
-      name: data.name ?? null,
-      createdAt: new Date(),
-    };
-
-    setConversations((prev) => [...prev, newConversation]);
-    setSelectedConversation(newConversation);
+  const handleCreateConversation = async (conversation: Conversation) => {
+    try {
+      const newConv = await createConversationMutation.mutateAsync(conversation);
+      setSelectedConversation(newConv);
+    } catch (error: any) {
+      toast({
+        title: "Erreur de création",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -135,7 +160,7 @@ export default function Chat() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Conversations</CardTitle>
               <NewChatDialog
-                  onCreateChat={handleCreateChat}
+                  onCreateChat={handleCreateConversation}
                   trigger={
                     <Button size="icon" variant="ghost">
                       <Plus className="w-4 h-4" />
@@ -154,27 +179,16 @@ export default function Chat() {
         </Card>
 
         <div className="flex flex-col gap-4">
-          <Card className="p-4 flex flex-wrap items-center gap-4 bg-muted/50">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">De :</span>
-              <LanguageSelector value={fromLang} onChange={setFromLang} />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">À:</span>
-              <LanguageSelector value={toLang} onChange={setToLang} />
-            </div>
-          </Card>
-
           <Card className="flex-1 overflow-hidden">
             <CardContent className="h-[calc(100vh-16rem)] p-4 overflow-y-auto">
               {selectedConversation ? (
-                  messages.length > 0 ? (
+                  messagesData && messagesData.length > 0 ? (
                       <div className="space-y-4">
-                        {messages.map((message) => (
+                        {messagesData.map((message) => (
                             <ChatMessage
                                 key={message.id}
                                 message={message}
-                                isOwn={message.sender === "user"}
+                                isOwn={message.sender === user?.id}
                             />
                         ))}
                       </div>

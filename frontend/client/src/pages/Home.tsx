@@ -41,48 +41,49 @@ export default function Home() {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex flex-col">
       {/* Hero Section */}
-      <section className="py-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Chat Multilingue Intelligent
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
-            Brisez les barrières linguistiques avec une traduction en temps réel. 
-            Connectez-vous avec n'importe qui, n'importe où, dans leur langue maternelle.
-          </p>
-        </motion.div>
+      <section className="py-20 justify-between h-screen flex flex-col">
+        <div className="flex h-full items-center gap-10">
+          <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="relative h-full w-1/2"
+          >
+            <Globe className={"top-0 left-0"} />
+          </motion.div>
+          <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-center w-1/2"
+          >
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Chat Multilingue Intelligent
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
+              Brisez les barrières linguistiques avec une traduction en temps réel.
+              Connectez-vous avec n'importe qui, n'importe où, dans leur langue maternelle.
+            </p>
+          </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="absolute w-screen h-screen top-0 -z-10"
-        >
-          <Globe  className={'h-screen w-screen'}/>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="text-center"
-        >
-          <Link href="/chat">
-            <Button size="lg" className="text-lg font-medium px-8 py-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300 transform hover:scale-105">
-              Essayez Maintenant
-            </Button>
-          </Link>
-        </motion.div>
+          <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="text-center"
+          >
+            <Link href="/chat">
+              <Button size="lg" className="text-lg font-medium px-8 py-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300 transform hover:scale-105">
+                Essayez Maintenant
+              </Button>
+            </Link>
+          </motion.div>
       </section>
 
       {/* Features Section */}
       <section className="py-20 bg-muted/50">
-        <div className="container px-4">
+        <div className=" px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
             Fonctionnalités Principales
           </h2>
@@ -110,7 +111,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="py-12 bg-background border-t mt-auto">
-        <div className="container px-4">
+        <div className=" px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <h3 className="font-bold mb-4 flex items-center gap-2">

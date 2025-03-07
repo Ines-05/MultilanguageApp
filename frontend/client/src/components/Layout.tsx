@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center px-4">
+        <div className=" flex h-16 items-center px-4">
           <Link href="/">
             <a className="flex items-center gap-2 font-bold text-xl">
               <Globe className="h-6 w-6" />
@@ -106,7 +106,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </header>
 
       <main className="flex-1">
-        <div className="container px-4 py-6">
+        <div className=" px-4 py-6">
           {children}
         </div>
       </main>

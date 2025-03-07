@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 const MOVEMENT_DAMPING = 1400;
 
 const GLOBE_CONFIG: COBEOptions = {
-    width: 800,
-    height: 800,
+    width: 100,
+    height: 100,
     onRender: () => {},
     devicePixelRatio: 2,
     phi: 0,
@@ -103,13 +103,13 @@ export function Globe({
     return (
         <div
             className={cn(
-                "absolute inset-0 mx-auto aspect-[1/1] w-full max-w-[600px]",
+                "absolute inset-0 mx-auto aspect-[1/1] w-full h-full max-w-[600px]",
                 className,
             )}
         >
             <canvas
                 className={cn(
-                    "size-full opacity-0 transition-opacity duration-500 [contain:layout_paint_size]",
+                    "w-full h-full opacity-0 transition-opacity duration-500 [contain:layout_paint_size]",
                 )}
                 ref={canvasRef}
                 onPointerDown={(e) => {

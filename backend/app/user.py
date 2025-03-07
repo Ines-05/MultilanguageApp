@@ -205,3 +205,12 @@ async def login(
 
     token = create_access_token(data={"sub": user.username})
     return {"access_token": token, "token_type": "bearer", "id": user.id}
+
+
+@router.get("/users/search")
+async def search_users(username: str, db: Session = Depends(get_db)):
+    """
+    Recherche des utilisateurs par nom d'utilisateur.
+    """
+    users = db.query(User).filter(User.username.ilike(f"%{username}%")).all()
+    return [{"id": user.id, "username": user.username} for user in users]

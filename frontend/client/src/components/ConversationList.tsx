@@ -29,7 +29,7 @@ export default function ConversationList({ selectedId, onSelect, conversations }
           )}
           <div className="text-left">
             <p className="font-medium">
-              {conversation.type === "private" ? "Chat privé" : conversation.name}
+              {conversation.name}
             </p>
             {conversation.type === "group" && (
               <p className="text-sm text-muted-foreground">

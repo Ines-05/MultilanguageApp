@@ -25,7 +25,7 @@ export const messages = pgTable("messages", {
     fromLanguage: text("from_language").notNull(),
     toLanguage: text("to_language").notNull(),
     timestamp: timestamp("timestamp").defaultNow().notNull(),
-    sender: text("sender").notNull(),
+    sender: serial("id").primaryKey(),
     conversationId: integer("conversation_id").notNull(),
 });
 

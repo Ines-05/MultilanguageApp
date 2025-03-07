@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import {AuthUser, User} from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { BASE_URL } from "@/lib/config";
 
 type LoginData = {
   username: string;  // Changed from email to username to match backend
@@ -33,7 +34,6 @@ type AuthContextType = {
 };
 
 const STORAGE_KEY = "auth_user";
-const API_BASE_URL = "http://localhost:8000"; // Adjust based on your API configuration
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const validateToken = async (token: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/protected`, {
+      const response = await fetch(`${BASE_URL}/protected`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         formData.append('username', credentials.username);
         formData.append('password', credentials.password);
 
-        const response = await fetch(`${API_BASE_URL}/token`, {
+        const response = await fetch(`${BASE_URL}/token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log(authData);
 
         // Fetch user details
-        const userResponse = await fetch(`${API_BASE_URL}/users/me`, {
+        const userResponse = await fetch(`${BASE_URL}/users/me`, {
           headers: {
             Authorization: `Bearer ${authData.access_token}`
           }
@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         // Create user
-        const createResponse = await fetch(`${API_BASE_URL}/create_user/${data.username}`, {
+        const createResponse = await fetch(`${BASE_URL}/create_user/${data.username}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

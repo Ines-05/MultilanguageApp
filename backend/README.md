@@ -1,33 +1,49 @@
-# FastAPI Chat App with WebSockets
+# Application de Chat en Temps Réel avec FastAPI et WebSockets
 
-A real-time chat application built using FastAPI and WebSockets. This project provides a simple and extensible foundation for creating chat applications with authentication, private messaging, and WebSocket communication.
+Une application de chat en temps réel construite avec **FastAPI** et **WebSockets**. Ce projet offre une base extensible pour créer des applications de messagerie avec **authentification**, **messagerie privée**, **traduction automatique**, et **gestion du registre linguistique**.
 
 ![FastAPI Chat App](docs.png)
 
-## Features
+---
 
-- **FastAPI**: Utilizes the FastAPI framework for building APIs with Python 3.7+ type hints.
-- **WebSocket Chat**: Real-time chat functionality using WebSockets for instant message updates.
-- **User Authentication**: Secure user authentication with OAuth2PasswordBearer and JWT tokens.
-- **Private Messaging**: Ability to send and receive private messages between users.
-- **SQLite Database**: Persistence layer using SQLite for ease of deployment and testing.
-- **Scalable and Extendable**: Designed for easy extension and customization based on your chat application needs.
+## Fonctionnalités
 
-## Getting Started
+- **FastAPI** : Utilisation du framework FastAPI avec Python 3.10+ pour des performances optimales.
+- **WebSockets** : Chat en temps réel avec mises à jour instantanées des messages.
+- **Authentification Sécurisée** : Authentification des utilisateurs avec OAuth2PasswordBearer et JWT.
+- **Messagerie Privée** : Possibilité d'envoyer et de recevoir des messages privés.
+- **Base de Données** : Persistance des messages via **SQLite** (peut être remplacé par PostgreSQL).
+- **Traduction Automatique** : Les messages sont traduits en temps réel avec **mBART** selon la langue et le registre de chaque utilisateur.
+- **Personnalisation du Registre** : Adaptation du langage (familier, courant, soutenu).
+- **Mise en Cache avec Redis** : Amélioration des performances grâce au stockage des traductions fréquentes.
+- **Scalabilité** : Conçu pour être facilement extensible et personnalisable.
 
-Follow these instructions to set up and run the project on your local machine. Ensure you have Python 3.7 or later installed.
+---
+
+## Installation et Démarrage
+
+### Prérequis
+
+- **Python 3.10+**
+- **Node.js** (pour le frontend)
+- **Redis** (si utilisé pour la mise en cache)
+- **Git**
 
 ### Installation
+
+Clonez le projet et installez les dépendances :
 
 ```bash
 git clone https://github.com/khfix/fastapi-chat-app.git
 cd fastapi-chat-app
 pip install -r requirements.txt
+````
 
-```
-Run the Application
+### Lancer l'application
+Démarrez le serveur FastAPI avec :
+
+```python
 uvicorn app.main:app --reload
+```
 
-Visit http://127.0.0.1:8000/docs in your browser to explore the API documentation.
-
-
+Ouvrez http://127.0.0.1:8000/docs dans votre navigateur pour explorer l'API via Swagger UI.

@@ -46,3 +46,8 @@ L'application est structurée en deux répertoires principaux :
 - **/frontend** : Code source du client, interface utilisateur et gestion de la communication WebSocket.
 - **/backend** : Code source du serveur (FastAPI) qui gère les endpoints HTTP, WebSocket, traduction via mBART et la persistance des données.
 
+## Ressources
+
+📄 [Rapport du projet](./Rapport.docx)  
+📊 [Présentation du projet](https://www.canva.com/design/DAGhEp3TYBo/m1arhBrVLdqe5nuq-NE7rA/edit?utm_content=DAGhEp3TYBo&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton )
+

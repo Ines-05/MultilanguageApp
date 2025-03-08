@@ -1,53 +1,120 @@
-# Multilanguage Chat App
+Multilanguage Chat App
+======================
 
 Une application de chat en temps réel permettant aux utilisateurs de communiquer dans différentes langues. Chaque message est automatiquement traduit en fonction des préférences linguistiques et du registre choisi (familier, courant, soutenu).
 
----
+Table des Matières
+------------------
 
-## Table des Matières
+*   [Vue d'ensemble](#vue-densemble)
+*   [Fonctionnalités](#fonctionnalites)
+*   [Architecture](#architecture)
+*   [Installation et Configuration](#installation)
+*   [Utilisation](#utilisation)
+*   [Dépendances](#dependances)
+*   [Roadmap](#roadmap)
+*   [Licence](#licence)
+*   [Ressources](#ressources)
 
-- [Vue d'ensemble](#vue-densemble)
-- [Fonctionnalités](#fonctionnalités)
-- [Architecture](#architecture)
-- [Installation et Configuration](#installation-et-configuration)
-    - [Backend](#backend)
-    - [Frontend](#frontend)
-- [Utilisation](#utilisation)
-- [Dépendances](#dépendances)
-- [Roadmap](#roadmap)
-- [Licence](#licence)
-
----
-
-## Vue d'ensemble
+Vue d'ensemble
+--------------
 
 Cette application de messagerie en temps réel se compose de deux parties principales :
 
-- **Frontend** : une interface utilisateur (probablement développée avec React) permettant aux utilisateurs de choisir leurs langues, d'envoyer des messages, et de visualiser les traductions en direct.
-- **Backend** : un serveur FastAPI gérant les WebSockets, la persistance des messages (via une base de données comme SQLite/PostgreSQL), la traduction des messages (avec le modèle mBART) et la mise en cache (via Redis).
+*   **Frontend** : Interface utilisateur (React) pour choisir les langues et visualiser les traductions
+*   **Backend** : Serveur FastAPI gérant WebSockets, base de données et traduction via mBART
 
----
+Fonctionnalités
+---------------
 
-## Fonctionnalités
+*   Traduction en temps réel
+*   Adaptation du registre (familier/courant/soutenu)
+*   Communication via WebSockets
+*   Prévisualisation des traductions
+*   Mise en cache avec Redis
 
-- **Traduction en temps réel** : Chaque message envoyé est automatiquement traduit dans la langue de destination choisie par le destinataire.
-- **Adaptation du registre** : Les messages peuvent être adaptés pour être affichés dans un registre familier, courant ou soutenu.
-- **WebSockets** : Communication en temps réel pour un chat fluide dans des salons de discussion ou en messages privés.
-- **Prévisualisation de la traduction** : Avant l'envoi, l'utilisateur voit une prévisualisation de la traduction.
-- **Reconnaissance et Synthèse Vocale** *(à venir)* : Utilisation de modèles STT et TTS pour faciliter la communication vocale.
-- **Mise en cache** : Utilisation de Redis pour stocker les traductions fréquentes et améliorer les performances.
+Architecture
+------------
 
----
 
-## Architecture
+        flowchart TD
+            A[Frontend (React)] -- WebSocket/HTTP --> B[Backend (FastAPI)]
+            B -- Modèles de traduction --> C[mBART / Hugging Face]
+            B -- Cache --> D[Redis]
+            B -- Persistance --> E[Base de données]
 
-L'application est structurée en deux répertoires principaux :
 
-- **/frontend** : Code source du client, interface utilisateur et gestion de la communication WebSocket.
-- **/backend** : Code source du serveur (FastAPI) qui gère les endpoints HTTP, WebSocket, traduction via mBART et la persistance des données.
+Installation et Configuration
+-----------------------------
 
-## Ressources
+### Backend
 
-📄 [Rapport du projet](./Rapport.docx)  
-📊 [Présentation du projet](https://www.canva.com/design/DAGhEp3TYBo/m1arhBrVLdqe5nuq-NE7rA/edit?utm_content=DAGhEp3TYBo&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton )
+1.  Cloner le dépôt :
 
+        git clone https://github.com/votre-utilisateur/multilanguage-chat-app.git
+        cd multilanguage-chat-app/backend
+
+2.  Créer l'environnement virtuel :
+
+        python -m venv venv
+        source venv/bin/activate  # Windows: venv\Scripts\activate
+        pip install -r requirements.txt
+
+3.  Lancer le serveur :
+
+        uvicorn app.main:app --reload
+
+
+### Frontend
+
+1.  Accéder au dossier :
+
+        cd ../frontend
+
+2.  Installer les dépendances :
+
+        npm install
+
+3.  Démarrer l'application :
+
+        npm start
+
+
+Utilisation
+-----------
+
+Accédez à [http://localhost:3000](http://localhost:3000) et configurez vos préférences linguistiques pour commencer à chatter.
+
+Dépendances
+-----------
+
+### Backend
+
+*   FastAPI
+*   SQLAlchemy
+*   Redis
+*   mBART
+
+### Frontend
+
+*   React
+*   WebSockets
+*   Axios
+
+Roadmap
+-------
+
+*   Intégration STT/TTS
+*   Optimisation des performances
+*   Tests automatisés
+
+Licence
+-------
+
+MIT - Voir le fichier [LICENSE](LICENSE)
+
+Ressources
+----------
+
+*   📄 [Rapport du projet](./rapport.pdf)
+*   📊 [Présentation](https://www.canva.com/design/DAGhEp3TYBo/m1arhBrVLdqe5nuq-NE7rA/edit?utm_content=DAGhEp3TYBo&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
